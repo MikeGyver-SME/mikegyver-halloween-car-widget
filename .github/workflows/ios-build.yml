@@ -1,0 +1,32 @@
+name: Build Halloween Car Widget IPA
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate project
+        run: |
+          xcodebuild -version
+          brew install xcodegen
+          xcodegen generate
+      - name: Compile app and widget for iPhone
+        run: |
+          xcodebuild -project HalloweenCarWidget.xcodeproj -scheme HalloweenCarWidget -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath "$RUNNER_TEMP/HalloweenBuild" CODE_SIGNING_ALLOWED=NO build
+      - name: Package unsigned IPA
+        run: |
+          mkdir -p "$RUNNER_TEMP/ipa/Payload"
+          cp -R "$RUNNER_TEMP/HalloweenBuild/Build/Products/Release-iphoneos/HalloweenCarWidget.app" "$RUNNER_TEMP/ipa/Payload/"
+          test -d "$RUNNER_TEMP/ipa/Payload/HalloweenCarWidget.app/PlugIns/HalloweenHouseWidget.appex"
+          cd "$RUNNER_TEMP/ipa"
+          zip -qr "$GITHUB_WORKSPACE/HalloweenCarWidget-unsigned.ipa" Payload
+      - uses: actions/upload-artifact@v4
+        with:
+          name: HalloweenCarWidget-unsigned-ipa
+          path: HalloweenCarWidget-unsigned.ipa
+          retention-days: 14

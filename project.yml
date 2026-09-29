@@ -1,0 +1,41 @@
+name: HalloweenCarWidget
+options:
+  deploymentTarget:
+    iOS: '26.0'
+settings:
+  base:
+    SWIFT_VERSION: '5.0'
+    IPHONEOS_DEPLOYMENT_TARGET: '26.0'
+    TARGETED_DEVICE_FAMILY: '1'
+targets:
+  HalloweenCarWidget:
+    type: application
+    platform: iOS
+    sources:
+      - App/Sources
+      - App/Assets.xcassets
+    dependencies:
+      - target: HalloweenHouseWidget
+        embed: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: studio.mikegyver.halloweencarwidget
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: MikeGyver Halloween
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+  HalloweenHouseWidget:
+    type: app-extension
+    platform: iOS
+    sources:
+      - Widget/Sources
+      - Widget/Assets.xcassets
+    info:
+      path: Widget/Info.plist
+      properties:
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: studio.mikegyver.halloweencarwidget.widget
+        SKIP_INSTALL: YES
