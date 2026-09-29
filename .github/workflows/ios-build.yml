@@ -42,6 +42,8 @@ jobs:
           assert widget_id == app_id + '.widget', widget_id
           assert widget_info['NSExtension']['NSExtensionPointIdentifier'] == 'com.apple.widgetkit-extension'
           assert widget_info['CFBundlePackageType'] == 'XPC!', widget_info['CFBundlePackageType']
+          for key in ('CFBundleVersion', 'CFBundleShortVersionString'):
+              assert app_info.get(key) == widget_info.get(key) and app_info.get(key), f'Missing or mismatched {key}: app={app_info.get(key)!r}, widget={widget_info.get(key)!r}'
           for bundle, info in ((app, app_info), (extension, widget_info)):
               executable = bundle / info['CFBundleExecutable']
               assert executable.is_file() and executable.stat().st_size > 0, f'Missing executable: {executable}'

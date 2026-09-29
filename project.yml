@@ -7,6 +7,8 @@ settings:
     SWIFT_VERSION: '5.0'
     IPHONEOS_DEPLOYMENT_TARGET: '26.0'
     TARGETED_DEVICE_FAMILY: '1'
+    MARKETING_VERSION: '1.0.1'
+    CURRENT_PROJECT_VERSION: '2'
 targets:
   HalloweenCarWidget:
     type: application
@@ -22,6 +24,8 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: studio.mikegyver.halloweencarwidget
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_CFBundleDisplayName: MikeGyver Halloween
+        INFOPLIST_KEY_CFBundleShortVersionString: '1.0.1'
+        INFOPLIST_KEY_CFBundleVersion: '2'
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
   HalloweenHouseWidget:
@@ -33,9 +37,12 @@ targets:
     info:
       path: Widget/Info.plist
       properties:
+        CFBundleShortVersionString: '1.0.1'
+        CFBundleVersion: '2'
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: studio.mikegyver.halloweencarwidget.widget
+        APPLICATION_EXTENSION_API_ONLY: YES
         SKIP_INSTALL: YES
