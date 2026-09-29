@@ -10,6 +10,8 @@ struct HalloweenCarWidgetApp: App {
 }
 
 struct HalloweenHomeView: View {
+    @State private var diagnostic = WidgetInstallDiagnostic.report()
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
@@ -37,10 +39,58 @@ struct HalloweenHomeView: View {
                 .padding(20)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 20))
+
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Widget installation check").font(.title2.bold())
+                    Text("If The Brave Porch is missing from the iPhone widget picker, tap Check again and share these results.")
+                        .foregroundStyle(.white.opacity(0.75))
+                    Text(diagnostic)
+                        .font(.system(.footnote, design: .monospaced))
+                        .textSelection(.enabled)
+                    Button("Check again") {
+                        diagnostic = WidgetInstallDiagnostic.report()
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+                .padding(20)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 20))
             }
             .padding(20)
         }
         .background(Color(red: 0.055, green: 0.035, blue: 0.13).ignoresSafeArea())
         .preferredColorScheme(.dark)
+    }
+}
+
+private enum WidgetInstallDiagnostic {
+    static func report() -> String {
+        let app = Bundle.main
+        let appID = app.bundleIdentifier ?? "missing"
+        let pluginURL = app.bundleURL.appendingPathComponent("PlugIns/HalloweenHouseWidget.appex", isDirectory: true)
+        let infoURL = pluginURL.appendingPathComponent("Info.plist")
+        let info: [String: Any]? = (try? Data(contentsOf: infoURL)).flatMap { data in
+            (try? PropertyListSerialization.propertyList(from: data, options: [], format: nil)) as? [String: Any]
+        }
+        let widgetID = info?["CFBundleIdentifier"] as? String ?? "missing"
+        let extensionInfo = info?["NSExtension"] as? [String: Any]
+        let point = extensionInfo?["NSExtensionPointIdentifier"] as? String ?? "missing"
+        let executable = info?["CFBundleExecutable"] as? String ?? "missing"
+        let present = FileManager.default.fileExists(atPath: pluginURL.path)
+        let binaryPresent = FileManager.default.fileExists(atPath: pluginURL.appendingPathComponent(executable).path)
+        let codeResources = FileManager.default.fileExists(atPath: pluginURL.appendingPathComponent("_CodeSignature/CodeResources").path)
+        let profile = FileManager.default.fileExists(atPath: pluginURL.appendingPathComponent("embedded.mobileprovision").path)
+        return """
+        App: \(appID)
+        App version: \(app.infoDictionary?["CFBundleShortVersionString"] as? String ?? "missing") (\(app.infoDictionary?["CFBundleVersion"] as? String ?? "missing"))
+        Widget folder: \(present ? "present" : "MISSING")
+        Widget executable: \(binaryPresent ? "present" : "MISSING")
+        Widget ID: \(widgetID)
+        ID prefix matches: \(widgetID.hasPrefix(appID + ".") ? "yes" : "NO")
+        Extension point: \(point)
+        Widget version: \(info?["CFBundleShortVersionString"] as? String ?? "missing") (\(info?["CFBundleVersion"] as? String ?? "missing"))
+        Signature resources: \(codeResources ? "present" : "missing")
+        Widget profile: \(profile ? "present" : "missing")
+        """
     }
 }
