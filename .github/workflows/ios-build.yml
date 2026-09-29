@@ -22,9 +22,36 @@ jobs:
         run: |
           mkdir -p "$RUNNER_TEMP/ipa/Payload"
           cp -R "$RUNNER_TEMP/HalloweenBuild/Build/Products/Release-iphoneos/HalloweenCarWidget.app" "$RUNNER_TEMP/ipa/Payload/"
-          test -d "$RUNNER_TEMP/ipa/Payload/HalloweenCarWidget.app/PlugIns/HalloweenHouseWidget.appex"
+          python3 - <<'PY'
+          from pathlib import Path
+          import plistlib
+
+          app = Path(__import__('os').environ['RUNNER_TEMP']) / 'ipa/Payload/HalloweenCarWidget.app'
+          extension = app / 'PlugIns/HalloweenHouseWidget.appex'
+          assert app.is_dir() and extension.is_dir(), 'App or embedded widget is missing'
+
+          def read_info(bundle):
+              with (bundle / 'Info.plist').open('rb') as handle:
+                  return plistlib.load(handle)
+
+          app_info = read_info(app)
+          widget_info = read_info(extension)
+          app_id = app_info['CFBundleIdentifier']
+          widget_id = widget_info['CFBundleIdentifier']
+          assert app_id == 'studio.mikegyver.halloweencarwidget', app_id
+          assert widget_id == app_id + '.widget', widget_id
+          assert widget_info['NSExtension']['NSExtensionPointIdentifier'] == 'com.apple.widgetkit-extension'
+          assert widget_info['CFBundlePackageType'] == 'XPC!', widget_info['CFBundlePackageType']
+          for bundle, info in ((app, app_info), (extension, widget_info)):
+              executable = bundle / info['CFBundleExecutable']
+              assert executable.is_file() and executable.stat().st_size > 0, f'Missing executable: {executable}'
+              assert info['CFBundleSupportedPlatforms'] == ['iPhoneOS'], info['CFBundleSupportedPlatforms']
+              print(f"Validated {info['CFBundleIdentifier']}: {executable.name} ({executable.stat().st_size} bytes)")
+          print('WidgetKit extension metadata and embedding validated.')
+          PY
           cd "$RUNNER_TEMP/ipa"
           zip -qr "$GITHUB_WORKSPACE/HalloweenCarWidget-unsigned.ipa" Payload
+          unzip -tq "$GITHUB_WORKSPACE/HalloweenCarWidget-unsigned.ipa"
       - uses: actions/upload-artifact@v4
         with:
           name: HalloweenCarWidget-unsigned-ipa

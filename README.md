@@ -7,10 +7,12 @@ The source artwork is a **1254 × 1254 RGB PNG**, bundled as `HauntedHouse.png` 
 ## Build with GitHub Actions
 
 1. Create an empty GitHub repository. Unzip this ZIP into its root, including `.github`, then commit and push `main`.
-2. Open the **Build Halloween Car Widget IPA** Actions run. Download `HalloweenCarWidget-unsigned-ipa` after a successful build; the packaging step verifies that `HalloweenHouseWidget.appex` is inside the app.
+2. Open the **Build Halloween Car Widget IPA** Actions run. Download `HalloweenCarWidget-unsigned-ipa` after a successful build. The packaging step verifies both executable files, the widget extension's `com.apple.widgetkit-extension` declaration, its bundle ID relationship to the app, and the IPA ZIP integrity. These checks validate the unsigned build, not Sideloadly's subsequent signing or the widget's registration on the phone.
 3. Extract the artifact ZIP. Install `HalloweenCarWidget-unsigned.ipa` using Sideloadly on Windows with your free Apple Account. Sideloadly must sign both the app and embedded widget extension. Verify installation on the iPhone; if signing rejects the extension, send the exact log. A free signature will need refreshing roughly every seven days.
 4. With the car parked and connected, on the iPhone open **Settings → General → CarPlay → your car → Widgets → Add Widgets** and look for **The Brave Porch**. Available widget stacks depend on the vehicle display. Also check the iPhone Home Screen widget gallery.
 
 No CarPlay app entitlement is requested: this is a WidgetKit extension. No app group, network access, vehicle telemetry, music playback, or private Apple capability is used. The widget is a glanceable artwork and countdown.
+
+If the app opens but **The Brave Porch** does not appear in the iPhone Home Screen widget picker, first verify that Sideloadly says **Dropping 0 of 1 plug-ins**. The build's validation output is under the **Package unsigned IPA** step. A successful step confirms the unsigned extension is packaged correctly; it does not prove that Sideloadly signed the extension or that iOS registered it. If it remains missing, inspect the signed installation rather than repeatedly rebuilding the same source.
 
 This package's contents and asset metadata were validated locally; an actual macOS build and CarPlay appearance have not yet been tested.
