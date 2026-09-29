@@ -56,8 +56,8 @@ struct HouseWidgetView: View {
                     if let house = artwork {
                         Image(uiImage: house)
                             .resizable()
-                            .scaledToFill()
                             .widgetAccentedRenderingMode(.fullColor)
+                            .scaledToFill()
                             .accessibilityLabel("MikeGyver Studio Halloween haunted house with Colin and Luan")
                     } else {
                         VStack(spacing: 8) {
