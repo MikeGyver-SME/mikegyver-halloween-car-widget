@@ -41,15 +41,35 @@ struct HouseProvider: TimelineProvider {
 struct HouseWidgetView: View {
     let entry: HouseEntry
 
+    private var artwork: UIImage? {
+        if let url = Bundle.main.url(forResource: "WidgetHauntedHouse", withExtension: "png"),
+           let image = UIImage(contentsOfFile: url.path) {
+            return image
+        }
+        return UIImage(named: "HauntedHouse", in: Bundle.main, compatibleWith: nil)
+    }
+
     var body: some View {
         ZStack(alignment: .top) {
             Color(red: 0.055, green: 0.035, blue: 0.13)
-            if let house = UIImage(named: "HauntedHouse", in: Bundle.main, compatibleWith: nil) {
-                Image(uiImage: house)
-                    .resizable()
-                    .scaledToFill()
-                    .accessibilityLabel("MikeGyver Studio Halloween haunted house with Colin and Luan")
-            }
+                .overlay {
+                    if let house = artwork {
+                        Image(uiImage: house)
+                            .resizable()
+                            .scaledToFill()
+                            .widgetAccentedRenderingMode(.fullColor)
+                            .accessibilityLabel("MikeGyver Studio Halloween haunted house with Colin and Luan")
+                    } else {
+                        VStack(spacing: 8) {
+                            Image(systemName: "moon.stars.fill")
+                                .font(.system(size: 40))
+                            Text("MikeGyver Studio")
+                                .font(.system(size: 12, weight: .bold))
+                        }
+                        .foregroundStyle(.orange)
+                    }
+                }
+                .clipped()
             VStack(spacing: 0) {
                 Text(entry.daysUntilHalloween == 0 ? "TONIGHT!" : "\(entry.daysUntilHalloween) DAYS")
                     .font(.system(size: 23, weight: .black, design: .rounded))
@@ -83,6 +103,7 @@ struct HalloweenHouseWidget: Widget {
         .configurationDisplayName("The Brave Porch")
         .description("Countdown to Halloween with Colin and Luan at the MikeGyver Studio haunted house.")
         .supportedFamilies([.systemSmall])
+        .contentMarginsDisabled()
     }
 }
 
