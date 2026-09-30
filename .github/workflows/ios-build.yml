@@ -22,7 +22,7 @@ jobs:
         run: |
           APP="$RUNNER_TEMP/HalloweenBuild/Build/Products/Release-iphoneos/HalloweenCarWidget.app"
           WIDGET="$APP/PlugIns/HalloweenHouseWidget.appex"
-          codesign --force --sign - --timestamp=none "$WIDGET"
+          codesign --force --sign - --timestamp=none --entitlements "$GITHUB_WORKSPACE/Widget/HalloweenHouseWidget.entitlements" "$WIDGET"
           codesign --force --sign - --timestamp=none "$APP"
           codesign --verify --strict --verbose=2 "$WIDGET"
           codesign --verify --deep --strict --verbose=2 "$APP"
