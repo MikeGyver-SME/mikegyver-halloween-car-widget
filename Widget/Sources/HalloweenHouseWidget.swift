@@ -5,6 +5,8 @@ import UIKit
 struct HouseEntry: TimelineEntry {
     let date: Date
     let daysUntilHalloween: Int
+    /// Which provider method produced this entry: "P" placeholder, "S" snapshot, "T" timeline.
+    let source: String
 }
 
 struct HouseProvider: TimelineProvider {
@@ -14,81 +16,57 @@ struct HouseProvider: TimelineProvider {
         return calendar
     }
 
-    private func entry(at date: Date) -> HouseEntry {
+    private func entry(at date: Date, source: String) -> HouseEntry {
         let today = chicago.startOfDay(for: date)
         let year = chicago.component(.year, from: today)
         guard var halloween = chicago.date(from: DateComponents(year: year, month: 10, day: 31)) else {
-            return HouseEntry(date: date, daysUntilHalloween: 0)
+            return HouseEntry(date: date, daysUntilHalloween: 0, source: source)
         }
         if today > halloween {
             halloween = chicago.date(from: DateComponents(year: year + 1, month: 10, day: 31)) ?? halloween
         }
         let days = chicago.dateComponents([.day], from: today, to: halloween).day ?? 0
-        return HouseEntry(date: date, daysUntilHalloween: max(0, days))
+        return HouseEntry(date: date, daysUntilHalloween: max(0, days), source: source)
     }
 
-    func placeholder(in context: Context) -> HouseEntry { entry(at: Date()) }
+    func placeholder(in context: Context) -> HouseEntry { entry(at: Date(), source: "P") }
     func getSnapshot(in context: Context, completion: @escaping (HouseEntry) -> Void) {
-        completion(entry(at: Date()))
+        completion(entry(at: Date(), source: "S"))
     }
     func getTimeline(in context: Context, completion: @escaping (Timeline<HouseEntry>) -> Void) {
         let now = Date()
         let tomorrow = chicago.date(byAdding: .day, value: 1, to: chicago.startOfDay(for: now)) ?? now.addingTimeInterval(86_400)
-        completion(Timeline(entries: [entry(at: now)], policy: .after(tomorrow)))
+        completion(Timeline(entries: [entry(at: now, source: "T")], policy: .after(tomorrow)))
     }
 }
 
+/// Build 7 diagnostic view: text only, no artwork. The big SRC letter names the
+/// provider method that produced the visible entry, so the Home Screen itself
+/// tells us whether the timeline is being delivered ("T") or only the
+/// placeholder ("P") ever shows up.
 struct HouseWidgetView: View {
     let entry: HouseEntry
 
-    private var artwork: UIImage? {
-        if let url = Bundle.main.url(forResource: "WidgetHauntedHouse", withExtension: "png"),
-           let image = UIImage(contentsOfFile: url.path) {
-            return image
-        }
-        return UIImage(named: "HauntedHouse", in: Bundle.main, compatibleWith: nil)
+    private var stamped: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm:ss"
+        formatter.timeZone = TimeZone(identifier: "America/Chicago")
+        return formatter.string(from: entry.date)
     }
 
     var body: some View {
-        ZStack(alignment: .top) {
-            Color(red: 0.055, green: 0.035, blue: 0.13)
-                .overlay {
-                    if let house = artwork {
-                        Image(uiImage: house)
-                            .resizable()
-                            .widgetAccentedRenderingMode(.fullColor)
-                            .scaledToFill()
-                            .accessibilityLabel("MikeGyver Studio Halloween haunted house with Colin and Luan")
-                    } else {
-                        VStack(spacing: 8) {
-                            Image(systemName: "moon.stars.fill")
-                                .font(.system(size: 40))
-                            Text("MikeGyver Studio")
-                                .font(.system(size: 12, weight: .bold))
-                        }
-                        .foregroundStyle(.orange)
-                    }
-                }
-                .clipped()
-            VStack(spacing: 0) {
-                Text(entry.daysUntilHalloween == 0 ? "TONIGHT!" : "\(entry.daysUntilHalloween) DAYS")
-                    .font(.system(size: 23, weight: .black, design: .rounded))
-                    .minimumScaleFactor(0.65)
-                    .lineLimit(1)
-                Text("UNTIL HALLOWEEN")
-                    .font(.system(size: 9, weight: .bold, design: .rounded))
-                    .tracking(0.6)
-                    .lineLimit(1)
-            }
-            .foregroundStyle(.white)
-            .shadow(color: .black, radius: 3)
-            .padding(.horizontal, 7)
-            .padding(.vertical, 6)
-            .frame(maxWidth: .infinity)
-            .background(LinearGradient(colors: [.black.opacity(0.85), .clear], startPoint: .top, endPoint: .bottom))
+        VStack(spacing: 4) {
+            Text("SRC: \(entry.source)")
+                .font(.system(size: 34, weight: .black, design: .rounded))
+            Text(entry.daysUntilHalloween == 0 ? "TONIGHT!" : "\(entry.daysUntilHalloween) DAYS")
+                .font(.system(size: 20, weight: .bold, design: .rounded))
+            Text(stamped)
+                .font(.system(size: 11, design: .monospaced))
+            Text("build 7 diag")
+                .font(.system(size: 11, design: .rounded))
         }
+        .foregroundStyle(.white)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .clipped()
         .containerBackground(for: .widget) { Color(red: 0.055, green: 0.035, blue: 0.13) }
     }
 }
