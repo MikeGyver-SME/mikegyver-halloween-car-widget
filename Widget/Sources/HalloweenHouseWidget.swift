@@ -41,6 +41,22 @@ struct HouseProvider: TimelineProvider {
 struct HouseWidgetView: View {
     let entry: HouseEntry
 
+    /// "FRI" weekday line for the two-line date badge.
+    private static func weekdayLabel(for date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "EEE"
+        return formatter.string(from: date).uppercased()
+    }
+
+    /// "10-02-2026" date line for the two-line date badge.
+    private static func dateLabel(for date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "MM-dd-yyyy"
+        return formatter.string(from: date)
+    }
+
     private var artwork: UIImage? {
         if let url = Bundle.main.url(forResource: "WidgetHauntedHouse", withExtension: "png"),
            let image = UIImage(contentsOfFile: url.path) {
@@ -86,6 +102,28 @@ struct HouseWidgetView: View {
             .padding(.vertical, 6)
             .frame(maxWidth: .infinity)
             .background(LinearGradient(colors: [.black.opacity(0.85), .clear], startPoint: .top, endPoint: .bottom))
+            // Today's date, two lines, over the left fence (clear of the pumpkin and the boys).
+            VStack(spacing: 0) {
+                HStack(spacing: 0) {
+                    VStack(spacing: 1) {
+                        Text(Self.weekdayLabel(for: entry.date))
+                        Text(Self.dateLabel(for: entry.date))
+                    }
+                    .font(.system(size: 7, weight: .bold, design: .rounded))
+                    .multilineTextAlignment(.center)
+                    .foregroundStyle(.white)
+                    .shadow(color: .black.opacity(0.9), radius: 2)
+                    .padding(.leading, 3.75)
+                    .padding(.trailing, 6)
+                    .padding(.vertical, 3)
+                    .background(.black.opacity(0.55), in: RoundedRectangle(cornerRadius: 8))
+                    .padding(.leading, 2)
+                    .padding(.top, 91)
+                    Spacer()
+                }
+                Spacer()
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .clipped()

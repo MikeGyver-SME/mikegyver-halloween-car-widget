@@ -60,6 +60,14 @@ struct HalloweenHomeView: View {
     @State private var diagnostic = WidgetInstallDiagnostic.report()
     @StateObject private var sounds = SpookySoundsPlayer()
 
+    /// "Fri 10-02-2026" style label for today.
+    private static var todayLabel: String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "EEE MM-dd-yyyy"
+        return formatter.string(from: Date())
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
@@ -77,6 +85,9 @@ struct HalloweenHomeView: View {
                 Text("A MikeGyver Studio Halloween countdown widget")
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.white.opacity(0.75))
+                Text(Self.todayLabel)
+                    .font(.callout.weight(.semibold))
+                    .foregroundStyle(.orange)
 
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Spooky Sounds").font(.title2.bold())
